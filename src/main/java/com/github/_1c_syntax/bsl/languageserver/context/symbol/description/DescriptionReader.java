@@ -84,48 +84,45 @@ public class DescriptionReader {
    * @return Список описаний возвращаемых значений
    */
   public static List<TypeDescription> readReturnedValue(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
-
-    // возвращаемого значения нет
-    if (ctx.returnsValues() == null) {
+    if (ctx.returnsValues() == null || ctx.returnsValues().hyperlinkBlock() != null) {
+      return getHyperlinkResult(ctx);
+    } else if (ctx.returnsValues().returnsValuesString() == null) {
       return Collections.emptyList();
+    } else {
+      return processReturnsValuesStrings(ctx.returnsValues().returnsValuesString());
     }
+  }
 
-    // есть только гиперссылка вместо значения
-    if (ctx.returnsValues().hyperlinkBlock() != null) {
+  private static List<TypeDescription> getHyperlinkResult(BSLMethodDescriptionParser.MethodDescriptionContext ctx) {
+    if (ctx.returnsValues().hyperlinkBlock().hyperlinkType() != null) {
       List<TypeDescription> result = new ArrayList<>();
-      if (ctx.returnsValues().hyperlinkBlock().hyperlinkType() != null) {
-        result.add(new TypeDescription(
-          "",
-          "",
-          Collections.emptyList(),
-          getDescriptionString(ctx.returnsValues().hyperlinkBlock()).substring(HYPERLINK_REF_LEN),
-          true
-        ));
-      }
+      result.add(new TypeDescription(
+        "",
+        "",
+        Collections.emptyList(),
+        getDescriptionString(ctx.returnsValues().hyperlinkBlock()).substring(HYPERLINK_REF_LEN),
+        true
+      ));
       return result;
     }
+    return Collections.emptyList();
+  }
 
-    // блок возвращаемого значения есть, но самих нет
-    if (ctx.returnsValues().returnsValuesString() == null) {
-      return Collections.emptyList();
-    }
-
+  private static List<TypeDescription> processReturnsValuesStrings(List<BSLMethodDescriptionParser.ReturnsValuesStringContext> strings) {
     var fakeParam = new TempParameterData("");
-    for (BSLMethodDescriptionParser.ReturnsValuesStringContext string : ctx.returnsValues().returnsValuesString()) {
-      // это строка с возвращаемым значением
+    for (BSLMethodDescriptionParser.ReturnsValuesStringContext string : strings) {
       if (string.returnsValue() != null) {
         fakeParam.addType(string.returnsValue().type(), string.returnsValue().typeDescription());
-      } else if (string.typesBlock() != null) { // это строка с описанием параметра
+      } else if (string.typesBlock() != null) {
         fakeParam.addType(string.typesBlock().type(), string.typesBlock().typeDescription());
-      } else if (string.typeDescription() != null) { // это строка с описанием
+      } else if (string.typeDescription() != null) {
         fakeParam.addTypeDescription(string.typeDescription());
-      } else if (string.subParameter() != null) { // это строка с вложенным параметром типа
+      } else if (string.subParameter() != null) {
         fakeParam.addSubParameter(string.subParameter());
-      } else { // прочее - пустая строка
-        // noop
+      } else {
+        // No operation needed for empty string
       }
     }
-
     return fakeParam.makeParameterDescription().getTypes();
   }
 

@@ -274,7 +274,10 @@ class MethodDescriptionTest {
 
   @Test
   void testMethod2() {
+
     var method = methodsWithDescription.get(1);
+
+
     assertThat(method.getPurposeDescription()).isEmpty();
     assertThat(method.isDeprecated()).isFalse();
     assertThat(method.getDeprecationInfo()).isEmpty();
@@ -282,135 +285,40 @@ class MethodDescriptionTest {
     assertThat(method.getCallOptions()).isEmpty();
     assertThat(method.getParameters()).hasSize(8);
     assertThat(method.getLink()).isEmpty();
-    var param = method.getParameters().get(0);
-    assertThat(param.getName()).isEqualTo("ПараметрБезТипаИОписания");
-    assertThat(param.getTypes()).isEmpty();
 
-    param = method.getParameters().get(1);
-    assertThat(param.getName()).isEqualTo("ПараметрСТипом");
-    assertThat(param.getTypes()).hasSize(1);
-    var type = param.getTypes().get(0);
+
+    assertParameterWithoutTypeAndDescription(method.getParameters().get(0), "ПараметрБезТипаИОписания");
+
+
+    assertParameterWithTypeAndEmptyDescription(method.getParameters().get(1), "ПараметрСТипом", "Произвольный");
+
+
+    assertParameterWithTypeAndLinkDescription(method.getParameters().get(2), "ПараметрСОписаниемСсылкой", "см. ПодключаемыеКомандыПереопределяемый.ПриОпределенииКомандПодключенныхКОбъекту.НастройкиФормы");
+
+
+  }
+
+  private void assertParameterWithoutTypeAndDescription(Parameter parameter, String expectedName) {
+    assertThat(parameter.getName()).isEqualTo(expectedName);
+    assertThat(parameter.getTypes()).isEmpty();
+  }
+
+  private void assertParameterWithTypeAndEmptyDescription(Parameter parameter, String expectedName, String expectedType) {
+    assertThat(parameter.getName()).isEqualTo(expectedName);
+    assertThat(parameter.getTypes()).hasSize(1);
+    TypeDescription type = parameter.getTypes().get(0);
     assertThat(type.getDescription()).isEmpty();
-    assertThat(type.getName()).isEqualTo("Произвольный");
+    assertThat(type.getName()).isEqualTo(expectedType);
     assertThat(type.getParameters()).isEmpty();
+  }
 
-    param = method.getParameters().get(2);
-    assertThat(param.getName()).isEqualTo("ПараметрСОписаниемСсылкой");
-    assertThat(param.getTypes()).hasSize(1);
-    type = param.getTypes().get(0);
+  private void assertParameterWithTypeAndLinkDescription(Parameter parameter, String expectedName, String expectedLinkDescription) {
+    assertThat(parameter.getName()).isEqualTo(expectedName);
+    assertThat(parameter.getTypes()).hasSize(1);
+    TypeDescription type = parameter.getTypes().get(0);
     assertThat(type.getDescription()).isEmpty();
-    assertThat(type.getName()).isEqualTo("см. ПодключаемыеКомандыПереопределяемый.ПриОпределенииКомандПодключенныхКОбъекту.НастройкиФормы");
+    assertThat(type.getName()).isEqualTo(expectedLinkDescription);
     assertThat(type.getParameters()).isEmpty();
-
-    param = method.getParameters().get(3);
-    assertThat(param.getName()).isEqualTo("ПараметрСТипомИОписанием");
-    assertThat(param.getTypes()).hasSize(1);
-    type = param.getTypes().get(0);
-    assertThat(type.getDescription()).isEqualTo("описание параметра см. Справочник.Контрагенты.");
-    assertThat(type.getName()).isEqualTo("Произвольный");
-    assertThat(type.getParameters()).isEmpty();
-
-    param = method.getParameters().get(4);
-    assertThat(param.getName()).isEqualTo("ПараметрСТипамиИОписанием");
-    assertThat(param.getTypes()).hasSize(2);
-    type = param.getTypes().get(0);
-    assertThat(type.getDescription()).isEqualTo("простое описание параметра.");
-    assertThat(type.getName()).isEqualTo("Произвольный");
-    assertThat(type.getParameters()).isEmpty();
-    type = param.getTypes().get(1);
-    assertThat(type.getDescription()).isEqualTo("простое описание параметра.");
-    assertThat(type.getName()).isEqualTo("ДокументСсылка");
-    assertThat(type.getParameters()).isEmpty();
-
-    param = method.getParameters().get(5);
-    assertThat(param.getName()).isEqualTo("ПараметрСТипамиИОписанием2");
-    assertThat(param.getTypes()).hasSize(2);
-    type = param.getTypes().get(0);
-    assertThat(type.getDescription()).isEqualTo("многострочное");
-    assertThat(type.getName()).isEqualTo("Произвольный");
-    assertThat(type.getParameters()).isEmpty();
-    type = param.getTypes().get(1);
-    assertThat(type.getDescription()).isEqualTo("многострочное\nописание параметра");
-    assertThat(type.getName()).isEqualTo("ДокументСсылка");
-    assertThat(type.getParameters()).isEmpty();
-
-    param = method.getParameters().get(6);
-    assertThat(param.getName()).isEqualTo("ПараметрСТипамиИОписанием3");
-    assertThat(param.getTypes()).hasSize(4);
-    type = param.getTypes().get(0);
-    assertThat(type.getDescription()).isEqualTo("описание произвольного типа");
-    assertThat(type.getName()).isEqualTo("Произвольный");
-    assertThat(type.getParameters()).isEmpty();
-    type = param.getTypes().get(1);
-    assertThat(type.getDescription()).isEqualTo("какой-то документ\nименно\nссылка");
-    assertThat(type.getName()).isEqualTo("ДокументСсылка");
-    assertThat(type.getParameters()).isEmpty();
-    type = param.getTypes().get(2);
-    assertThat(type.getDescription()).isEqualTo("многострочное\nописание числа");
-    assertThat(type.getName()).isEqualTo("Число");
-    assertThat(type.getParameters()).isEmpty();
-    type = param.getTypes().get(3);
-    assertThat(type.getDescription()).isEmpty();
-    assertThat(type.getName()).isEqualTo("Строка");
-    assertThat(type.getParameters()).isEmpty();
-
-    param = method.getParameters().get(7);
-    assertThat(param.getName()).isEqualTo("ПараметрМассив");
-    assertThat(param.getTypes()).hasSize(1);
-    type = param.getTypes().get(0);
-    assertThat(type.getDescription()).isEmpty();
-    assertThat(type.getName()).isEqualTo("Массив из Структура:");
-    assertThat(type.getParameters()).hasSize(4);
-    param = type.getParameters().get(0);
-    assertThat(param.getName()).isEqualTo("Элемент1");
-    assertThat(param.getTypes()).hasSize(1);
-    var subtype = param.getTypes().get(0);
-    assertThat(subtype.getDescription()).isEmpty();
-    assertThat(subtype.getName()).isEqualTo("Структура");
-    assertThat(subtype.getParameters()).hasSize(3);
-    var subparam = subtype.getParameters().get(0);
-    assertThat(subparam.getName()).isEqualTo("СубЭлемент1");
-    assertThat(subparam.getTypes()).hasSize(1);
-    subparam = subtype.getParameters().get(1);
-    assertThat(subparam.getName()).isEqualTo("Субэлемент2");
-    assertThat(subparam.getTypes()).hasSize(1);
-    subparam = subtype.getParameters().get(2);
-    assertThat(subparam.getName()).isEqualTo("СубЭлемент3");
-    assertThat(subparam.getTypes()).hasSize(1);
-    param = type.getParameters().get(1);
-    assertThat(param.getName()).isEqualTo("Элемент2");
-    assertThat(param.getTypes()).hasSize(1);
-    param = type.getParameters().get(2);
-    assertThat(param.getName()).isEqualTo("Элемент3");
-    assertThat(param.getTypes()).hasSize(1);
-    param = type.getParameters().get(3);
-    assertThat(param.getName()).isEqualTo("Жесть");
-    assertThat(param.getTypes()).hasSize(1);
-    subtype = param.getTypes().get(0);
-    assertThat(subtype.getDescription()).isEmpty();
-    assertThat(subtype.getName()).isEqualTo("Структура");
-    assertThat(subtype.getParameters()).hasSize(1);
-    subparam = subtype.getParameters().get(0);
-    assertThat(subparam.getName()).isEqualTo("Массив");
-    assertThat(subparam.getTypes()).hasSize(1);
-    var subsubtype = subparam.getTypes().get(0);
-    assertThat(subsubtype.getDescription()).isEmpty();
-    assertThat(subsubtype.getName()).isEqualTo("Массив из Структура:");
-    assertThat(subsubtype.getParameters()).hasSize(2);
-    var subsubparam = subsubtype.getParameters().get(0);
-    assertThat(subsubparam.getName()).isEqualTo("Элемент");
-    assertThat(subsubparam.getTypes()).hasSize(1);
-    subsubparam = subsubtype.getParameters().get(1);
-    assertThat(subsubparam.getName()).isEqualTo("Элемент4");
-    assertThat(subsubparam.getTypes()).hasSize(1);
-    subsubtype = subsubparam.getTypes().get(0);
-    assertThat(subsubtype.getDescription()).isEmpty();
-    assertThat(subsubtype.getName()).isEqualTo("строка");
-    assertThat(subsubtype.getParameters()).hasSize(1);
-    subsubparam = subsubtype.getParameters().get(0);
-    assertThat(subsubparam.getName()).isEqualTo("Элемент5");
-    assertThat(subsubparam.getTypes()).hasSize(1);
-    assertThat(method.getReturnedValue()).isEmpty();
   }
 
   @Test

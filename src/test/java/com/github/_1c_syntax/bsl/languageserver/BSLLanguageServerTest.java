@@ -46,6 +46,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
+
+
 class BSLLanguageServerTest {
 
   @Autowired
@@ -53,49 +55,34 @@ class BSLLanguageServerTest {
 
   @BeforeEach
   void setUp() {
-    new MockUp<System>() {
-      @Mock
-      public void exit(int value) {
-        throw new RuntimeException(String.valueOf(value));
-      }
-    };
+
+  }
+
+  @AfterEach
+  void tearDown() {
+
   }
 
   @Test
-  void initialize() throws ExecutionException, InterruptedException {
-    // given
-    InitializeParams params = new InitializeParams();
+  void initializeWorkspaceSymbolProvider() throws ExecutionException, InterruptedException {
 
-    WorkspaceFolder workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString());
-    List<WorkspaceFolder> workspaceFolders = List.of(workspaceFolder);
-    params.setWorkspaceFolders(workspaceFolders);
+    InitializeParams params = createInitializeParams();
 
-    // when
+
     InitializeResult initialize = server.initialize(params).get();
 
-    // then
+
     assertThat(initialize.getCapabilities().getWorkspaceSymbolProvider().isRight()).isTrue();
   }
 
   @Test
-  void initializeRename() throws ExecutionException, InterruptedException {
-    // given
-    InitializeParams params = new InitializeParams();
+  void initializeRenameProvider() throws ExecutionException, InterruptedException {
 
-    WorkspaceFolder workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString());
-    List<WorkspaceFolder> workspaceFolders = List.of(workspaceFolder);
-    params.setWorkspaceFolders(workspaceFolders);
+    InitializeParams params = createInitializeParamsWithRenameCapabilities();
 
-    var capabilities = new ClientCapabilities();
-    params.setCapabilities(capabilities);
-    capabilities.setTextDocument(new TextDocumentClientCapabilities());
-    var textDocument = capabilities.getTextDocument();
-    textDocument.setRename(new RenameCapabilities());
-    textDocument.getRename().setPrepareSupport(true);
-    // when
     InitializeResult initialize = server.initialize(params).get();
 
-    // then
+
     assertThat(initialize.getCapabilities().getRenameProvider().isRight()).isTrue();
   }
 
@@ -108,7 +95,7 @@ class BSLLanguageServerTest {
 
   @Test
   void exitWithoutShutdown() {
-    // when-then
+
     assertThatThrownBy(() -> server.exit())
       .isInstanceOf(RuntimeException.class)
       .hasMessage("1");
@@ -116,13 +103,31 @@ class BSLLanguageServerTest {
 
   @Test
   void exitWithShutdown() {
-    // given
+
     server.shutdown();
 
-    // when-then
+
     assertThatThrownBy(() -> server.exit())
       .isInstanceOf(RuntimeException.class)
       .hasMessage("0");
   }
 
+  private InitializeParams createInitializeParams() {
+    InitializeParams params = new InitializeParams();
+    WorkspaceFolder workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString());
+    List<WorkspaceFolder> workspaceFolders = List.of(workspaceFolder);
+    params.setWorkspaceFolders(workspaceFolders);
+    return params;
+  }
+
+  private InitializeParams createInitializeParamsWithRenameCapabilities() {
+    InitializeParams params = createInitializeParams();
+    var capabilities = new ClientCapabilities();
+    params.setCapabilities(capabilities);
+    capabilities.setTextDocument(new TextDocumentClientCapabilities());
+    var textDocument = capabilities.getTextDocument();
+    textDocument.setRename(new RenameCapabilities());
+    textDocument.getRename().setPrepareSupport(true);
+    return params;
+  }
 }

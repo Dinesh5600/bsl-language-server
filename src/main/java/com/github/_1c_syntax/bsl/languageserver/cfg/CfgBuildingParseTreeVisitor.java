@@ -419,33 +419,38 @@ public class CfgBuildingParseTreeVisitor extends BSLParserBaseVisitor<ParseTree>
   }
 
   @Override
-  public ParseTree visitPreproc_elsif(BSLParser.Preproc_elsifContext ctx) {
-
+  public ParseTree visitPreprocElsif(BSLParser.Preproc_elsifContext ctx) {
     if (!producePreprocessorConditionsEnabled) {
       return ctx;
     }
 
-    // По грамматике это может быть оторванный препроцессор, без начала
-    var condition = popPreprocCondition();
-    if (condition == null) {
+    PreprocessorConditionVertex conditionVertex = popPreprocCondition();
+    if (conditionVertex == null) {
       return super.visitPreproc_elsif(ctx);
     }
 
-    var newCondition = new PreprocessorConditionVertex(ctx);
-    graph.addVertex(newCondition);
-    graph.addEdge(condition, newCondition, CfgEdgeType.FALSE_BRANCH);
+    PreprocessorConditionVertex newConditionVertex = createNewConditionVertex(ctx);
+    graph.addVertex(newConditionVertex);
+    graph.addEdge(conditionVertex, newConditionVertex, CfgEdgeType.FALSE_BRANCH);
 
-    var previousBody = blocks.leaveBlock();
-    blocks.getCurrentBlock().getBuildParts().push(previousBody.end());
+    PreprocessorBlock previousBlock = blocks.leaveBlock();
+    blocks.getCurrentBlock().getBuildParts().push(previousBlock.end());
 
-    var body = blocks.enterBlock();
-    graph.addVertex(body.begin());
-    graph.addEdge(newCondition, body.begin(), CfgEdgeType.TRUE_BRANCH);
-
-    body.getBuildParts().push(newCondition);
+    PreprocessorBlock currentBlock = enterNewBlockWithVertex(newConditionVertex);
+    currentBlock.getBuildParts().push(newConditionVertex);
 
     return ctx;
+  }
 
+  private PreprocessorConditionVertex createNewConditionVertex(BSLParser.Preproc_elsifContext ctx) {
+    return new PreprocessorConditionVertex(ctx);
+  }
+
+  private PreprocessorBlock enterNewBlockWithVertex(PreprocessorConditionVertex vertex) {
+    PreprocessorBlock currentBlock = blocks.enterBlock();
+    graph.addVertex(currentBlock.begin());
+    graph.addEdge(vertex, currentBlock.begin(), CfgEdgeType.TRUE_BRANCH);
+    return currentBlock;
   }
 
   @Override
